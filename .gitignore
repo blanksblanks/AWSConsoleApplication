@@ -1,0 +1,50 @@
+
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+# Eclipse Core
+.project
+
+# Eclipse Project settings
+.settings/
+
+# Binary files
+bin/
+
+# Private properties like awsCredentials
+*.properties
+
+# Temp files
+.metadata
+.gradle
+tmp/
+*.tmp
+*.bak
+*~
+*.swp
+*.swo
+*~.nib
+.loadpath
+
+# Just in case:
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# CDT-specific
+.cproject
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# TeXlipse plugin
+.texlipse

@@ -17,6 +17,13 @@
  * 
  * 
  */
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +34,10 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
+import com.amazonaws.services.ec2.model.CreateKeyPairRequest;
+import com.amazonaws.services.ec2.model.CreateKeyPairResult;
+import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesResult;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
@@ -35,6 +46,8 @@ import com.amazonaws.services.ec2.model.DescribeKeyPairsResult;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
+import com.amazonaws.services.ec2.model.IpPermission;
+import com.amazonaws.services.ec2.model.KeyPair;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -138,6 +151,121 @@ public class AwsSample {
             int minInstanceCount = 1; // create 1 instance
             int maxInstanceCount = 1;
             RunInstancesRequest rir = new RunInstancesRequest(imageId, minInstanceCount, maxInstanceCount);
+            
+            // Create a new security group
+            String testGroup = "testSecurityGroup";
+            
+            try {
+                CreateSecurityGroupRequest securityGroupRequest =
+                    new CreateSecurityGroupRequest(testGroup, "Security Group Test");
+                ec2.createSecurityGroup(securityGroupRequest);
+                System.out.println("The security group '" + testGroup + "has been created.");
+            } catch (AmazonServiceException ase) {
+                // Likely this means that the group is already created, so continue.
+                System.out.println(ase.getMessage());
+            }
+            
+            String ipAddr = "0.0.0.0/0";
+
+//            // Get the IP of the current host, so that we can limit the Security Group
+//            // by default to the ip range associated with your subnet.
+//            try {
+//                InetAddress addr = InetAddress.getLocalHost();
+//
+//                // Get IP Address
+//                ipAddr = addr.getHostAddress()+"/10";
+//            } catch (UnknownHostException e) {
+//            }
+
+            // Create a range that you would like to populate.
+            ArrayList<String> ipRanges = new ArrayList<String>();
+            ipRanges.add(ipAddr);
+            
+	        // Open up port 22 for TCP traffic to the associated IP from
+	        // above (e.g. ssh traffic).
+	        IpPermission sshPermission = new IpPermission();
+	        sshPermission.setIpProtocol("tcp");
+	        sshPermission.setFromPort(new Integer(22));
+	        sshPermission.setToPort(new Integer(22));
+	        sshPermission.setIpRanges(ipRanges);
+	
+	        // Open up port 80 for TCP traffic to the associated IP from
+	        // above (e.g. http traffic).
+	        IpPermission httpPermission = new IpPermission();
+	        httpPermission.setIpProtocol("tcp");
+	        httpPermission.setFromPort(new Integer(80));
+	        httpPermission.setToPort(new Integer(80));
+	        httpPermission.setIpRanges(ipRanges);
+	
+	        // Open up port 443 for TCP traffic to the associated IP from
+	        // above (e.g. https traffic).
+	        IpPermission httpsPermission = new IpPermission();
+	        httpsPermission.setIpProtocol("tcp");
+	        httpsPermission.setFromPort(new Integer(443));
+	        httpsPermission.setToPort(new Integer(443));
+	        httpsPermission.setIpRanges(ipRanges);
+	
+	        // Open up ports 0 to 65535 for TCP traffic to the associated IP from
+	        // above (e.g. tcp traffic).
+	        IpPermission tcpPermission = new IpPermission();
+	        tcpPermission.setIpProtocol("tcp");
+	        tcpPermission.setFromPort(new Integer(0));
+	        tcpPermission.setToPort(new Integer(65535));
+	        tcpPermission.setIpRanges(ipRanges);
+            
+	        ArrayList<IpPermission> ipPermissions = new ArrayList<IpPermission>();
+	        ipPermissions.add(sshPermission);
+	        ipPermissions.add(httpPermission);
+	        ipPermissions.add(httpsPermission);
+	        ipPermissions.add(tcpPermission);
+	        
+	        try {
+	            // Authorize the ports to the used.
+	            AuthorizeSecurityGroupIngressRequest ingressRequest =
+	                new AuthorizeSecurityGroupIngressRequest(testGroup,ipPermissions);
+	            ec2.authorizeSecurityGroupIngress(ingressRequest);
+	            System.out.println("Access control defined to allow SSH, HTTP, HTTPS, and TCP connections.");
+	        } catch (AmazonServiceException ase) {
+	            // Ignore because this likely means the zone has already
+	            // been authorized.
+	            System.out.println(ase.getMessage());
+	        }
+	         
+	        String testKey = "testKey";
+
+	        try {
+		        // Create and initialize a CreateKeyPairRequest instance.
+		        CreateKeyPairRequest createKeyPairRequest = new CreateKeyPairRequest();
+		        createKeyPairRequest.withKeyName(testKey);
+		        // Pass the request object to the createKeyPair method.
+		        // The method returns a CreateKeyPairResult instance.
+		        CreateKeyPairResult createKeyPairResult =
+		        		  ec2.createKeyPair(createKeyPairRequest);
+		        // Call the result object's getKeyPair method to obtain a KeyPair object.
+		        // Call the KeyPair object's getKeyMaterial method to obtain the unencrypted
+		        // PEM-encoded private key.
+		        KeyPair keyPair = new KeyPair();
+		        keyPair = createKeyPairResult.getKeyPair();
+		        String privateKey = keyPair.getKeyMaterial();
+		        
+		        String filename = ("./" + keyPair.getKeyName() + ".pem");
+		        FileWriter pemfile = new FileWriter(filename);
+		        BufferedWriter output = new BufferedWriter(pemfile);
+		        output.write(privateKey);
+		        output.close();
+		   
+		        System.out.println("New key pair has been created and saved to " + filename);
+		        System.out.println("Fingerprint: " + keyPair.getKeyFingerprint());
+	        } catch (AmazonServiceException ase) {
+	            // Ignore because this likely means the keypair already exists.
+	            System.out.println("Caught Exception: " + ase.getMessage());
+	        } catch (IOException e) {
+	        	System.out.println("Caught Exception writing .pem file");
+	        }
+            
+            // Add security group and key pair to RunInstancesRequest
+            rir.withSecurityGroups(testGroup).withKeyName(testKey);
+            
             RunInstancesResult result = ec2.runInstances(rir);
             
             //get instanceId from the result

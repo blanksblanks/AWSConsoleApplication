@@ -109,10 +109,10 @@ public class AwsSample {
             
             /*********************************************
              *                 
-             *  #4 Describe Key Pair
+             *  #4 Describe Key Pairs
              *                 
              *********************************************/
-            System.out.println("#4 Describe Key Pair");
+            System.out.println("#4 Describe Key Pairs");
             DescribeKeyPairsResult dkr = ec2.describeKeyPairs();
             System.out.println(dkr.toString());
             
@@ -157,7 +157,14 @@ public class AwsSample {
             int maxInstanceCount = 1;
             RunInstancesRequest rir = new RunInstancesRequest(imageId, minInstanceCount, maxInstanceCount);
             
-            // Create a new security group
+            /*********************************************
+             * 
+             *  #6.1 Create a Security Group and
+             *  Define Access Control to Allow:
+             *  SSH, HTTP, HTTPS and TCP.
+             *  
+             *********************************************/
+            System.out.println("#6.1 Create a Security Group and Allow SSH, HTTP, and TCP");
             String testGroup = "testSecurityGroup";
             
             try {
@@ -171,16 +178,6 @@ public class AwsSample {
             }
             
             String ipAddr = "0.0.0.0/0";
-
-//            // Get the IP of the current host, so that we can limit the Security Group
-//            // by default to the ip range associated with your subnet.
-//            try {
-//                InetAddress addr = InetAddress.getLocalHost();
-//
-//                // Get IP Address
-//                ipAddr = addr.getHostAddress()+"/10";
-//            } catch (UnknownHostException e) {
-//            }
 
             // Create a range that you would like to populate.
             ArrayList<String> ipRanges = new ArrayList<String>();
@@ -235,7 +232,15 @@ public class AwsSample {
 	            // been authorized.
 	            System.out.println(ase.getMessage());
 	        }
-	         
+	        
+            /*********************************************
+             * 
+             *  #6.2 Create Key Pair for Authentication and
+             *  Download to .PEM file
+             *  (to use for SSH, run chmod 400 testKey.PEM)
+             *  
+             *********************************************/
+	        System.out.println("Create Key Pair for Authentication");
 	        String testKey = "testKey";
 
 	        try {
@@ -273,6 +278,12 @@ public class AwsSample {
             
             RunInstancesResult result = ec2.runInstances(rir);
             
+            /*********************************************
+             * 
+             *  #6.3 Log Private IP, Public IP and PublicDNS
+             *  
+             *********************************************/
+            System.out.println("#6.3 Log Private IP, Public IP and Public DNS");
             //get instanceId from the result
             List<Instance> resultInstance = result.getReservation().getInstances();
             String createdInstanceId = null;
@@ -287,10 +298,10 @@ public class AwsSample {
             
             /*********************************************
              * 
-             *  #7 Create a 'tag' for the new instance.
+             *  #7 Create a 'Tag' for the New Instance
              *  
              *********************************************/
-            System.out.println("#7 Create a 'tag' for the new instance.");
+            System.out.println("#7 Create a 'Tag' for the New Instance.");
             List<String> resources = new LinkedList<String>();
             List<Tag> tags = new LinkedList<Tag>();
             Tag nameTag = new Tag("Name", "MyFirstInstance");
@@ -308,16 +319,16 @@ public class AwsSample {
              *  #8 Stop/Start an Instance
              *  
              *********************************************/
-            System.out.println("#8 Stop the Instance");
-            List<String> instanceIds = new LinkedList<String>();
-            instanceIds.add(createdInstanceId);
+            //System.out.println("#8 Stop the Instance");
+            //List<String> instanceIds = new LinkedList<String>();
+            //instanceIds.add(createdInstanceId);
             
             //stop
-            StopInstancesRequest stopIR = new StopInstancesRequest(instanceIds);
+            //StopInstancesRequest stopIR = new StopInstancesRequest(instanceIds);
             //ec2.stopInstances(stopIR);
             
             //start
-            StartInstancesRequest startIR = new StartInstancesRequest(instanceIds);
+            //StartInstancesRequest startIR = new StartInstancesRequest(instanceIds);
             //ec2.startInstances(startIR);
             
             
@@ -326,8 +337,8 @@ public class AwsSample {
              *  #9 Terminate an Instance
              *  
              *********************************************/
-            System.out.println("#9 Terminate the Instance");
-            TerminateInstancesRequest tir = new TerminateInstancesRequest(instanceIds);
+            //System.out.println("#9 Terminate the Instance");
+            //TerminateInstancesRequest tir = new TerminateInstancesRequest(instanceIds);
             //ec2.terminateInstances(tir);
             
                         
@@ -337,7 +348,7 @@ public class AwsSample {
              *  
              *********************************************/
             ec2.shutdown();
-            System.out.println("#10 Successfully Shutdown Client Object");
+            System.out.println("#8 Successfully Shutdown Client Object");
             
             
             

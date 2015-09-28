@@ -139,6 +139,11 @@ public class AwsSample {
             	// instance state
             	InstanceState is = ins.getState();
             	System.out.println(instanceId+" "+is.getName());
+            	
+            	// List instance private IP, public IP and public DNS
+                System.out.println("  Private IP: " + ins.getPrivateIpAddress());
+                System.out.println("  Public IP: " + ins.getPublicIpAddress()); 
+            	System.out.println("  Public DNS: " + ins.getPublicDnsName());
             }
             
             /*********************************************
@@ -273,7 +278,10 @@ public class AwsSample {
             String createdInstanceId = null;
             for (Instance ins : resultInstance){
             	createdInstanceId = ins.getInstanceId();
-            	System.out.println("New instance has been created: "+ins.getInstanceId());
+            	System.out.println("New instance has been created: " + ins.getInstanceId());
+                System.out.println("  Private IP: " + ins.getPrivateIpAddress());
+                System.out.println("  Public IP: " + ins.getPublicIpAddress()); 
+            	System.out.println("  Public DNS: " + ins.getPublicDnsName());
             }
             
             

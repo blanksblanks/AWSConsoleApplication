@@ -78,7 +78,7 @@ public class AwsSample {
              *  #2 Describe Availability Zones.
              *  
              *********************************************/
-        	System.out.println("#2 Describe Availability Zones.");
+        	System.out.println("#2 Describe Availability Zones");
             DescribeAvailabilityZonesResult availabilityZonesResult = ec2.describeAvailabilityZones();
             System.out.println("You have access to " + availabilityZonesResult.getAvailabilityZones().size() +
                     " Availability Zones.");
@@ -99,7 +99,7 @@ public class AwsSample {
              *  #4 Describe Key Pair
              *                 
              *********************************************/
-            System.out.println("#9 Describe Key Pair");
+            System.out.println("#4 Describe Key Pair");
             DescribeKeyPairsResult dkr = ec2.describeKeyPairs();
             System.out.println(dkr.toString());
             
@@ -108,7 +108,7 @@ public class AwsSample {
              *  #5 Describe Current Instances
              *  
              *********************************************/
-            System.out.println("#4 Describe Current Instances");
+            System.out.println("#5 Describe Current Instances");
             DescribeInstancesResult describeInstancesRequest = ec2.describeInstances();
             List<Reservation> reservations = describeInstancesRequest.getReservations();
             Set<Instance> instances = new HashSet<Instance>();
@@ -133,8 +133,8 @@ public class AwsSample {
              *  #6 Create an Instance
              *  
              *********************************************/
-            System.out.println("#5 Create an Instance");
-            String imageId = "ami-76f0061f"; //Basic 32-bit Amazon Linux AMI
+            System.out.println("#6 Create an Instance");
+            String imageId = "ami-76f0061f"; // Basic 32-bit Amazon Linux AMI
             int minInstanceCount = 1; // create 1 instance
             int maxInstanceCount = 1;
             RunInstancesRequest rir = new RunInstancesRequest(imageId, minInstanceCount, maxInstanceCount);
@@ -154,7 +154,7 @@ public class AwsSample {
              *  #7 Create a 'tag' for the new instance.
              *  
              *********************************************/
-            System.out.println("#6 Create a 'tag' for the new instance.");
+            System.out.println("#7 Create a 'tag' for the new instance.");
             List<String> resources = new LinkedList<String>();
             List<Tag> tags = new LinkedList<Tag>();
             Tag nameTag = new Tag("Name", "MyFirstInstance");
@@ -172,7 +172,7 @@ public class AwsSample {
              *  #8 Stop/Start an Instance
              *  
              *********************************************/
-            System.out.println("#7 Stop the Instance");
+            System.out.println("#8 Stop the Instance");
             List<String> instanceIds = new LinkedList<String>();
             instanceIds.add(createdInstanceId);
             
@@ -190,7 +190,7 @@ public class AwsSample {
              *  #9 Terminate an Instance
              *  
              *********************************************/
-            System.out.println("#8 Terminate the Instance");
+            System.out.println("#9 Terminate the Instance");
             TerminateInstancesRequest tir = new TerminateInstancesRequest(instanceIds);
             //ec2.terminateInstances(tir);
             
@@ -201,6 +201,7 @@ public class AwsSample {
              *  
              *********************************************/
             ec2.shutdown();
+            System.out.println("#10 Successfully Shutdown Client Object");
             
             
             

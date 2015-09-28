@@ -13,6 +13,7 @@ bin/
 
 # Private properties like awsCredentials
 *.properties
+*.pem
 
 # Temp files
 .metadata

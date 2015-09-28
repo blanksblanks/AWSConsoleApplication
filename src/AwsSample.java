@@ -48,6 +48,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.IpPermission;
 import com.amazonaws.services.ec2.model.KeyPair;
+import com.amazonaws.services.ec2.model.Placement;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -122,13 +123,8 @@ public class AwsSample {
              *  
              *********************************************/
             System.out.println("#5 Describe Current Instances");
-            DescribeInstancesResult describeInstancesRequest = ec2.describeInstances();
-            List<Reservation> reservations = describeInstancesRequest.getReservations();
-            Set<Instance> instances = new HashSet<Instance>();
-            // add all instances to a Set.
-            for (Reservation reservation : reservations) {
-            	instances.addAll(reservation.getInstances());
-            }
+
+            Set<Instance> instances = getCurrentInstances();
             
             System.out.println("You have " + instances.size() + " Amazon EC2 instance(s).");
             for (Instance ins : instances){
@@ -139,11 +135,6 @@ public class AwsSample {
             	// instance state
             	InstanceState is = ins.getState();
             	System.out.println(instanceId+" "+is.getName());
-            	
-            	// List instance private IP, public IP and public DNS
-                System.out.println("  Private IP: " + ins.getPrivateIpAddress());
-                System.out.println("  Public IP: " + ins.getPublicIpAddress()); 
-            	System.out.println("  Public DNS: " + ins.getPublicDnsName());
             }
             
             /*********************************************
@@ -268,13 +259,15 @@ public class AwsSample {
 		        System.out.println("Fingerprint: " + keyPair.getKeyFingerprint());
 	        } catch (AmazonServiceException ase) {
 	            // Ignore because this likely means the keypair already exists.
-	            System.out.println("Caught Exception: " + ase.getMessage());
+	            System.out.println(ase.getMessage());
 	        } catch (IOException e) {
-	        	System.out.println("Caught Exception writing .pem file");
+	        	System.out.println(e.getMessage());
 	        }
             
-            // Add security group and key pair to RunInstancesRequest
-            rir.withSecurityGroups(testGroup).withKeyName(testKey);
+            // Add security group, key pair and placement to RunInstancesRequest
+            Placement testPlacement = new Placement();
+            testPlacement.setAvailabilityZone("us-east-1a");
+            rir.withSecurityGroups(testGroup).withKeyName(testKey).withPlacement(testPlacement);
             
             RunInstancesResult result = ec2.runInstances(rir);
             
@@ -290,6 +283,13 @@ public class AwsSample {
             for (Instance ins : resultInstance){
             	createdInstanceId = ins.getInstanceId();
             	System.out.println("New instance has been created: " + ins.getInstanceId());
+               	// instance state
+            	InstanceState is = ins.getState();
+            	while (is.getName().equals("pending")){
+            		Thread.sleep(50000);
+            		ins = getCurrentInstance(createdInstanceId);
+            		is = ins.getState();
+            	}            	
                 System.out.println("  Private IP: " + ins.getPrivateIpAddress());
                 System.out.println("  Public IP: " + ins.getPublicIpAddress()); 
             	System.out.println("  Public DNS: " + ins.getPublicDnsName());
@@ -360,5 +360,26 @@ public class AwsSample {
         }
 
         
+    }
+    
+    public static Set<Instance> getCurrentInstances(){
+        DescribeInstancesResult describeInstancesRequest = ec2.describeInstances();
+        List<Reservation> reservations = describeInstancesRequest.getReservations();
+        Set<Instance> instances = new HashSet<Instance>();
+        // add all instances to a Set.
+        for (Reservation reservation : reservations) {
+        	instances.addAll(reservation.getInstances());
+        }
+    	return instances;
+    }
+    
+    public static Instance getCurrentInstance(String instanceId){    	
+        Set<Instance> instances = getCurrentInstances();
+        for (Instance ins : instances) {
+           	if (instanceId.equalsIgnoreCase(ins.getInstanceId()) == true) {
+        		return ins;
+        	}
+        }
+        return null;      	
     }
 }
